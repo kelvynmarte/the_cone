@@ -1,5 +1,8 @@
 package dk.ciid.cone;
 
+import netP5.NetAddress;
+import oscP5.OscMessage;
+import oscP5.OscP5;
 import processing.core.PVector;
 import processing.video.*;
 import controlP5.*;
@@ -22,11 +25,14 @@ public class ConeCodeReader extends PApplet {
 
     ControlP5 cp5;
     ArrayList<Blob> centerBlobs = new ArrayList<>();
-
+    ArrayList<Blob> lastFrameBlobs = new ArrayList<>();
     ArrayList<Blob> blobs = new ArrayList<>();
 
+
+    NetAddress myRemoteLocation;
+
     public void settings() {
-        size(640*2, 480*2);
+        size(640 * 2, 480 * 2);
     }
 
     public void setup() {
@@ -49,9 +55,11 @@ public class ConeCodeReader extends PApplet {
             cam.start();
         }
 
-        cp5 = new ControlP5( this );
-        cp5.addColorWheel("colorCenter" , 3*width/4 -200, 200 , 200 ).setRGB(color(30,30,30));
-        cp5.addColorWheel("colorDots" , 3*width/4 -200 , 580 , 200 ).setRGB(color(128,20,20));
+        cp5 = new ControlP5(this);
+        cp5.addColorWheel("colorCenter", 3 * width / 4 - 200, 200, 200).setRGB(color(30, 30, 30));
+        cp5.addColorWheel("colorDots", 3 * width / 4 - 200, 580, 200).setRGB(color(128, 20, 20));
+
+        myRemoteLocation = new NetAddress("127.0.0.1", 32000);
 
     }
 
@@ -63,7 +71,7 @@ public class ConeCodeReader extends PApplet {
         background(255);
         noStroke();
         fill(45);
-        rect(width/2, 0, width/2, height);
+        rect(width / 2, 0, width / 2, height);
 
         blobs = new ArrayList<>(); // reset blobs
         centerBlobs = new ArrayList<>(); // reset blobs
@@ -72,25 +80,25 @@ public class ConeCodeReader extends PApplet {
         ArrayList<PVector> blackDots = new ArrayList();
 
         if (cam.available() == true) {
-            image(cam, 0, height/2);
+            image(cam, 0, height / 2);
             cam.read();
-            for (int x = 0; x< CAMERA_WIDTH/READING_RESOLUTION; x++) {
-                for (int y = 0; y< CAMERA_HEIGHT/READING_RESOLUTION; y++) {
-                    int c = cam.get(x*READING_RESOLUTION, y*READING_RESOLUTION);
+            for (int x = 0; x < CAMERA_WIDTH / READING_RESOLUTION; x++) {
+                for (int y = 0; y < CAMERA_HEIGHT / READING_RESOLUTION; y++) {
+                    int c = cam.get(x * READING_RESOLUTION, y * READING_RESOLUTION);
                     fill(c);
-                    if(red(c)< 200 && green(c) < 200 && blue(c) > 180){
+                    if (red(c) < 200 && green(c) < 200 && blue(c) > 180) {
                         // println("blue dot at: " + x*READING_RESOLUTION + " / " + y*READING_RESOLUTION);
                     }
-                    if(red(c) > 90 && red(c) > green(c) + 30){
+                    if (red(c) > 90 && red(c) > green(c) + 30) {
                         // println("red dot at: " + x*READING_RESOLUTION + " / " + y*READING_RESOLUTION);
-                        addToBlobs(new PVector(x*READING_RESOLUTION,y*READING_RESOLUTION), BlobType.CENTER);
+                        addToBlobs(new PVector(x * READING_RESOLUTION, y * READING_RESOLUTION), BlobType.CENTER);
                     }
 
-                    if(red(c)< 40 && green(c) < 40 && blue(c) < 40){
+                    if (red(c) < 40 && green(c) < 40 && blue(c) < 40) {
                         // println("black dot at: " + x*READING_RESOLUTION + " / " + y*READING_RESOLUTION);
-                        blackDots.add(new PVector(x*READING_RESOLUTION, y*READING_RESOLUTION));
-                        ellipse(x*READING_RESOLUTION, y*READING_RESOLUTION, READING_RESOLUTION, READING_RESOLUTION);
-                        addToBlobs(new PVector(x*READING_RESOLUTION,y*READING_RESOLUTION), BlobType.DOT);
+                        blackDots.add(new PVector(x * READING_RESOLUTION, y * READING_RESOLUTION));
+                        ellipse(x * READING_RESOLUTION, y * READING_RESOLUTION, READING_RESOLUTION, READING_RESOLUTION);
+                        addToBlobs(new PVector(x * READING_RESOLUTION, y * READING_RESOLUTION), BlobType.DOT);
 
                     }
 
@@ -105,35 +113,34 @@ public class ConeCodeReader extends PApplet {
         // println("blob count before filter: " + blobs.size());
 
         ListIterator<Blob> blobIterator = blobs.listIterator();
-        while(blobIterator.hasNext()) {
+        while (blobIterator.hasNext()) {
             Blob blob = blobIterator.next();
-            if(blob.getNumberOfPoints() < MIN_NUMBER_OF_POINTS_PER_BLOB) blobIterator.remove();
+            if (blob.getNumberOfPoints() < MIN_NUMBER_OF_POINTS_PER_BLOB) blobIterator.remove();
         }
 
 
         ListIterator<Blob> centerBlobsIterator = centerBlobs.listIterator();
-        while(centerBlobsIterator.hasNext()) {
+        while (centerBlobsIterator.hasNext()) {
             Blob blob = centerBlobsIterator.next();
-            if(blob.getNumberOfPoints() < MIN_NUMBER_OF_POINTS_PER_BLOB) centerBlobsIterator.remove();
+            if (blob.getNumberOfPoints() < MIN_NUMBER_OF_POINTS_PER_BLOB) centerBlobsIterator.remove();
         }
 
         // println("blob count: " + blobs.size());
 
-        if(blobs.size() == 3 && centerBlobs.size() == 1){
+        if (blobs.size() == 3 && centerBlobs.size() == 1) {
             PVector centerPoint = centerBlobs.get(0).getCenterPoint();
             // Collections.sort(blobs);
 
 
-
             println("");
-            for(Blob blob : blobs){
-                fill(255,255, 0);
+            for (Blob blob : blobs) {
+                fill(255, 255, 0);
                 ellipse(blob.getCenterPoint().x, blob.getCenterPoint().y, 40, 40);
 
                 // Calculate angle and distance
                 int angle = (int) Math.toDegrees(Math.atan2(blob.getCenterPoint().y - centerPoint.y, blob.getCenterPoint().x - centerPoint.x));
 
-                if(angle < 0){
+                if (angle < 0) {
                     angle += 360;
                 }
                 blob.setAngleToCenter(angle);
@@ -144,12 +151,23 @@ public class ConeCodeReader extends PApplet {
             }
             blobs.sort(Blob::compareTo);
 
-            for(Blob blob : blobs){
+            for (Blob blob : blobs) {
                 println("distance: " + blob.getDistanceToCenter() + "  angle: " + blob.getAngleToCenter() + "°");
 
             }
+            OscMessage myOscMessage = new OscMessage("/newTrack");
+                        /* add a value (an integer) to the OscMessage */
+            String blobAngleMsg = "";
+            for (Blob blob : blobs) {
+                blobAngleMsg = blobAngleMsg + blob.getAngleToCenter() + ";";
+            }
 
-            fill(255,0, 0);
+            myOscMessage.add(blobAngleMsg);
+                        /* send the OscMessage to a remote location specified in myNetAddress */
+            // oscP5.send(myOscMessage, myBroadcastLocation);
+            OscP5.flush(myOscMessage, myRemoteLocation);
+
+            fill(255, 0, 0);
             ellipse(centerPoint.x, centerPoint.y, 40, 40);
         }
 
@@ -173,7 +191,6 @@ public class ConeCodeReader extends PApplet {
         ellipse(width-40, height-40, 8, 8);*/
 
 
-
         delay(40);
         // The following does the same, and is faster when just drawing the image
         // without any additional resizing, transformations, or tint.
@@ -182,12 +199,11 @@ public class ConeCodeReader extends PApplet {
 
     }
 
-    public void addToBlobs(PVector point, BlobType type){
+    public void addToBlobs(PVector point, BlobType type) {
         boolean createNewBlob = true;
 
 
-
-        if(type == BlobType.DOT) {
+        if (type == BlobType.DOT) {
             for (Blob blob : blobs) {
                 if (blob.getBlobType() == type && blob.isPartOfBlob(point)) {
                     blob.addPointToBLob(point);
@@ -195,10 +211,10 @@ public class ConeCodeReader extends PApplet {
                     return;
                 }
             }
-            if(createNewBlob) blobs.add(new Blob(point, type));
+            if (createNewBlob) blobs.add(new Blob(point, type));
         }
 
-        if(type == BlobType.CENTER) {
+        if (type == BlobType.CENTER) {
             for (Blob centerBlob : centerBlobs) {
                 if (centerBlob.getBlobType() == type && centerBlob.isPartOfBlob(point)) {
                     centerBlob.addPointToBLob(point);
@@ -206,9 +222,8 @@ public class ConeCodeReader extends PApplet {
                     return;
                 }
             }
-            if(createNewBlob) centerBlobs.add(new Blob(point, type));
+            if (createNewBlob) centerBlobs.add(new Blob(point, type));
         }
-
 
 
     }

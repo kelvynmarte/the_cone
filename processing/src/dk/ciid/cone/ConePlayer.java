@@ -1,6 +1,8 @@
 package dk.ciid.cone;
 
 import controlP5.*;
+import oscP5.OscMessage;
+import oscP5.OscP5;
 import processing.core.*;
 import processing.serial.Serial;
 import processing.sound.*;
@@ -15,18 +17,25 @@ public class ConePlayer extends PApplet {
     private SoundFile currentPlaying;
     private Serial serialPort;
     private static int LF = 10;
+    OscP5 oscP5;
+    public static int SERVER_DEFAULT_SERVER_LISTENING_PORT = 32000;
+
+
+
 
 
 
     public void settings() {
         size(700,400);
+        oscP5 = new OscP5(this,SERVER_DEFAULT_SERVER_LISTENING_PORT);
+
     }
 
     public void setup() {
         smooth();
         noStroke();
 
-        String path = "/Users/vytas/workspace/the_cone/processing/src/data/music/"; // <--- CHANGE THIS.
+        String path = "/Users/kelvyn/Projects/2017_03 Physical Computing Connected/Production/Code/processing/src/data/music/"; // <--- CHANGE THIS.
         fileNames = listFileNames(path);
         for (int i = 0; i < fileNames.length; i++) {
             fileNames[i] = path + fileNames[i];
@@ -101,6 +110,22 @@ public class ConePlayer extends PApplet {
         }
         currentPlaying.cue(myCue);
         currentPlaying.loop();
+    }
+
+    public void oscEvent(OscMessage theOscMessage) {
+        print("### received an osc message.");
+        print(" addrpattern: "+theOscMessage.addrPattern());
+        println(" typetag: "+theOscMessage.typetag());
+        println(" typetag: "+theOscMessage.arguments()[0]);
+        // accelX = (float) theOscMessage.arguments()[0];
+
+        switch (theOscMessage.addrPattern()){
+            case "/newTrack":
+
+            break;
+
+
+        }
     }
 
     public static void main(String[] args) {

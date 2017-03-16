@@ -1,5 +1,6 @@
 package dk.ciid.cone;
 
+import oscP5.OscP5;
 import processing.core.PVector;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ public class Blob implements Comparable<Blob> {
     BlobType blobType;
     int angleToCenter;
     int distanceToCenter;
+    OscP5 oscP5;
 
 
 
