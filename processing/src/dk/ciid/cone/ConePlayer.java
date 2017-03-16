@@ -1,7 +1,10 @@
 package dk.ciid.cone;
 
 import controlP5.*;
+import oscP5.OscMessage;
+import oscP5.OscP5;
 import processing.core.*;
+import processing.serial.Serial;
 import processing.sound.*;
 import java.io.File;
 
@@ -17,6 +20,10 @@ public class ConePlayer extends PApplet {
     private String[] fileNames;
     private SoundFile currentPlaying;
     private int currentKnobValue;
+    Serial serialPort;
+    private static int LF = 10;
+
+
 
     public void settings() {
         size(700,400);
@@ -41,9 +48,27 @@ public class ConePlayer extends PApplet {
         for (int i = 0; i < fileNames.length; i++) {
             fileNames[i] = path + fileNames[i];
         }
+
+        String portName = Serial.list()[3];
+        print(Serial.list());
+        serialPort = new Serial(this, portName, 9600);
     }
 
     public void draw() {
+        if ( serialPort.available() > 0) {  // If data is available,
+            try {
+                String stringValue = serialPort.readStringUntil(LF);
+                if (stringValue != null) {
+                    print(stringValue);
+
+                }
+
+            } catch (Exception ex) {
+                println("error");
+                System.out.println(ex);
+
+            }
+        }
 
     }
 
