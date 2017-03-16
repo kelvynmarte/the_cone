@@ -1,8 +1,6 @@
 package dk.ciid.cone;
 
 import controlP5.*;
-import oscP5.OscMessage;
-import oscP5.OscP5;
 import processing.core.*;
 import processing.serial.Serial;
 import processing.sound.*;
@@ -10,17 +8,12 @@ import java.io.File;
 
 public class ConePlayer extends PApplet {
 
-    private ControlP5 cp5;
     private static int knobRangeMin = 0;
     private static int knobRangeMax = 255;
-    private Knob myKnob1;
-    private Knob myKnob2;
-    private Knob myKnob3;
     private int lastTimePlayed = 0;
     private String[] fileNames;
     private SoundFile currentPlaying;
-    private int currentKnobValue;
-    Serial serialPort;
+    private Serial serialPort;
     private static int LF = 10;
 
 
@@ -33,17 +26,7 @@ public class ConePlayer extends PApplet {
         smooth();
         noStroke();
 
-        cp5 = new ControlP5(this);
-
-        myKnob1 = cp5.addKnob("knob1")
-                .setRange(knobRangeMin, knobRangeMax)
-                .setValue(50)
-                .setPosition(100, 70)
-                .setRadius(50)
-                .setDragDirection(Knob.VERTICAL)
-        ;
-
-        String path = "/Users/vytas/workspace/the_cone/music/";
+        String path = "/Users/vytas/workspace/the_cone/processing/src/data/music/"; // <--- CHANGE THIS.
         fileNames = listFileNames(path);
         for (int i = 0; i < fileNames.length; i++) {
             fileNames[i] = path + fileNames[i];
@@ -59,8 +42,13 @@ public class ConePlayer extends PApplet {
             try {
                 String stringValue = serialPort.readStringUntil(LF);
                 if (stringValue != null) {
-                    print(stringValue);
+                    String[] values = stringValue.split(";");
+                    int[] intValues = new int[3];
+                    intValues[0] = Integer.parseInt(values[0]);
+                    intValues[1] = Integer.parseInt(values[1]);
+                    intValues[2] = Integer.parseInt(values[2].replaceAll("[\\D]", ""));
 
+                    playFileFromValueArray(intValues, -1);
                 }
 
             } catch (Exception ex) {
@@ -83,21 +71,21 @@ public class ConePlayer extends PApplet {
         }
     }
 
-    private void knob1(int theValue) {
-        println("a knob event. Value: "+theValue);
-        playFileFromKnobValue(theValue, -1);
-    }
-
-    private void playFileFromKnobValue(int knobValue, int cue) { //-1 cue is random
+    private void playFileFromValueArray(int[] valueArray, int cue) { //-1 cue is random
         if (fileNames == null) {
             return;
         }
         if (millis() - lastTimePlayed < 200) {
             return;
         }
-        currentKnobValue = knobValue;
         lastTimePlayed = millis();
-        int index = (int)map(knobValue, knobRangeMin, knobRangeMax, 0, fileNames.length - 1);
+
+        int value1 = (int)map(valueArray[0], 0, 254, 0,30);
+        int value2 = (int)map(valueArray[1], 0, 254, 0,30);
+        int value3 = (int)map(valueArray[2], 0, 254, 0,30);
+
+        int index = (value1 ^ value2) ^ value3;
+
         String fileName = fileNames[index];
         println(fileName);
 
