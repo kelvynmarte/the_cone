@@ -82,14 +82,14 @@ public class ConeCodeReader extends PApplet {
                     }
                     if(red(c) > 90 && red(c) > green(c) + 30){
                         // println("red dot at: " + x*READING_RESOLUTION + " / " + y*READING_RESOLUTION);
-                        addToBlobs(new PVector(x*READING_RESOLUTION,y*READING_RESOLUTION), BlobType.DOT);
+                        addToBlobs(new PVector(x*READING_RESOLUTION,y*READING_RESOLUTION), BlobType.CENTER);
                     }
 
                     if(red(c)< 40 && green(c) < 40 && blue(c) < 40){
                         // println("black dot at: " + x*READING_RESOLUTION + " / " + y*READING_RESOLUTION);
                         blackDots.add(new PVector(x*READING_RESOLUTION, y*READING_RESOLUTION));
                         ellipse(x*READING_RESOLUTION, y*READING_RESOLUTION, READING_RESOLUTION, READING_RESOLUTION);
-                        addToBlobs(new PVector(x*READING_RESOLUTION,y*READING_RESOLUTION), BlobType.CENTER);
+                        addToBlobs(new PVector(x*READING_RESOLUTION,y*READING_RESOLUTION), BlobType.DOT);
 
                     }
 
@@ -106,7 +106,6 @@ public class ConeCodeReader extends PApplet {
         ListIterator<Blob> blobIterator = blobs.listIterator();
         while(blobIterator.hasNext()) {
             Blob blob = blobIterator.next();
-            println("num of points" + blob.getNumberOfPoints());
             if(blob.getNumberOfPoints() < MIN_NUMBER_OF_POINTS_PER_BLOB) blobIterator.remove();
         }
 
@@ -119,11 +118,13 @@ public class ConeCodeReader extends PApplet {
 
         println("blob count: " + blobs.size());
 
-        if(blobs.size() == 4){
+        if(blobs.size() == 3 && centerBlobs.size() == 1){
             for(Blob blob : blobs){
                 fill(255,255, 0);
                 ellipse(blob.startPositin.x, blob.startPositin.y, 40, 40);
             }
+            fill(255,0, 0);
+            ellipse(centerBlobs.get(0).startPositin.x, centerBlobs.get(0).startPositin.y, 40, 40);
         }
 
 
@@ -157,14 +158,31 @@ public class ConeCodeReader extends PApplet {
 
     public void addToBlobs(PVector point, BlobType type){
         boolean createNewBlob = true;
-        for (Blob blob : blobs) {
-            if (blob.getBlobType() == type && blob.isPartOfBlob(point)) {
-                blob.addPointToBLob(point);
-                createNewBlob = false;
-                return;
+
+
+
+        if(type == BlobType.DOT) {
+            for (Blob blob : blobs) {
+                if (blob.getBlobType() == type && blob.isPartOfBlob(point)) {
+                    blob.addPointToBLob(point);
+                    createNewBlob = false;
+                    return;
+                }
             }
+            if(createNewBlob) blobs.add(new Blob(point, type));
         }
-        if(createNewBlob) blobs.add(new Blob(point, type));
+
+        if(type == BlobType.CENTER) {
+            for (Blob centerBlob : centerBlobs) {
+                if (centerBlob.getBlobType() == type && centerBlob.isPartOfBlob(point)) {
+                    centerBlob.addPointToBLob(point);
+                    createNewBlob = false;
+                    return;
+                }
+            }
+            if(createNewBlob) centerBlobs.add(new Blob(point, type));
+        }
+
 
 
     }
