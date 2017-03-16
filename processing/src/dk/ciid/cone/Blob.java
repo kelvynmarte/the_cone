@@ -43,8 +43,8 @@ public class Blob {
         int x = 0;
         int y = 0;
         for(PVector point : points){
-            x++;
-            y++;
+            x+=point.x;
+            y+=point.y;
         }
         return new PVector(x/points.size(),y/points.size());
     }

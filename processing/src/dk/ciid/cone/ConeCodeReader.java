@@ -121,10 +121,10 @@ public class ConeCodeReader extends PApplet {
         if(blobs.size() == 3 && centerBlobs.size() == 1){
             for(Blob blob : blobs){
                 fill(255,255, 0);
-                ellipse(blob.startPositin.x, blob.startPositin.y, 40, 40);
+                ellipse(blob.getCenterPoint().x, blob.getCenterPoint().y, 40, 40);
             }
             fill(255,0, 0);
-            ellipse(centerBlobs.get(0).startPositin.x, centerBlobs.get(0).startPositin.y, 40, 40);
+            ellipse(centerBlobs.get(0).getCenterPoint().x, centerBlobs.get(0).getCenterPoint().y, 40, 40);
         }
 
 
