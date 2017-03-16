@@ -7,6 +7,7 @@ import controlP5.*;
 import processing.core.PApplet;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.ListIterator;
 
 public class ConeCodeReader extends PApplet {
@@ -101,7 +102,7 @@ public class ConeCodeReader extends PApplet {
         }
 
         // Remove to small blobs
-        println("blob count before filter: " + blobs.size());
+        // println("blob count before filter: " + blobs.size());
 
         ListIterator<Blob> blobIterator = blobs.listIterator();
         while(blobIterator.hasNext()) {
@@ -116,15 +117,40 @@ public class ConeCodeReader extends PApplet {
             if(blob.getNumberOfPoints() < MIN_NUMBER_OF_POINTS_PER_BLOB) centerBlobsIterator.remove();
         }
 
-        println("blob count: " + blobs.size());
+        // println("blob count: " + blobs.size());
 
         if(blobs.size() == 3 && centerBlobs.size() == 1){
+            PVector centerPoint = centerBlobs.get(0).getCenterPoint();
+            // Collections.sort(blobs);
+
+
+
+            println("");
             for(Blob blob : blobs){
                 fill(255,255, 0);
                 ellipse(blob.getCenterPoint().x, blob.getCenterPoint().y, 40, 40);
+
+                // Calculate angle and distance
+                int angle = (int) Math.toDegrees(Math.atan2(blob.getCenterPoint().y - centerPoint.y, blob.getCenterPoint().x - centerPoint.x));
+
+                if(angle < 0){
+                    angle += 360;
+                }
+                blob.setAngleToCenter(angle);
+                int distance = new Double(Math.sqrt(Math.pow((blob.getCenterPoint().x - centerPoint.x), 2) + Math.pow((blob.getCenterPoint().y - centerPoint.y), 2))).intValue();
+                blob.setDistanceToCenter(distance);
+
+
             }
+            blobs.sort(Blob::compareTo);
+
+            for(Blob blob : blobs){
+                println("distance: " + blob.getDistanceToCenter() + "  angle: " + blob.getAngleToCenter() + "°");
+
+            }
+
             fill(255,0, 0);
-            ellipse(centerBlobs.get(0).getCenterPoint().x, centerBlobs.get(0).getCenterPoint().y, 40, 40);
+            ellipse(centerPoint.x, centerPoint.y, 40, 40);
         }
 
 
