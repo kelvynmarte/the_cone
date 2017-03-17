@@ -16,6 +16,7 @@ public class ConePlayer extends PApplet {
     private int lastTimePlayed = 0;
     private String[] fileNames;
     private SoundFile currentPlaying;
+    private int currentPlayingIndex = 0;
     private Serial serialPort;
     private static int LF = 10;
     OscP5 oscP5;
@@ -36,7 +37,8 @@ public class ConePlayer extends PApplet {
         smooth();
         noStroke();
 
-        String path = "/Users/kelvyn/Projects/2017_03 Physical Computing Connected/Production/Code/processing/src/data/music/"; // <--- CHANGE THIS.
+        //String path = "/Users/kelvyn/Projects/2017_03 Physical Computing Connected/Production/Code/processing/src/data/music/"; // <--- CHANGE THIS.
+        String path = "/Users/vytas/workspace/the_cone/processing/src/data/music/";
         fileNames = listFileNames(path);
         for (int i = 0; i < fileNames.length; i++) {
             fileNames[i] = path + fileNames[i];
@@ -90,11 +92,19 @@ public class ConePlayer extends PApplet {
         }
         lastTimePlayed = millis();
 
-        int value1 = (int)map(valueArray[0], 0, 360, 0,30);
-        int value2 = (int)map(valueArray[1], 0, 360, 0,30);
-        int value3 = (int)map(valueArray[2], 0, 360, 0,30);
+//        int value1 = (int)map(valueArray[0], 0, 360, 0,30);
+//        int value2 = (int)map(valueArray[1], 0, 360, 0,30);
+//        int value3 = (int)map(valueArray[2], 0, 360, 0,30);
+        int value1 = (int)map(valueArray[0], 0, 180, 0,30);
+        int value2 = (int)map(valueArray[1], 0, 180, 0,30);
+        int value3 = (int)map(valueArray[2], 0, 180, 0,30);
 
         int index = (value1 ^ value2) ^ value3;
+
+        if (currentPlayingIndex == index) {
+            return;
+        }
+        currentPlayingIndex = index;
 
         String fileName = fileNames[index];
         println(fileName);
