@@ -133,14 +133,19 @@ public class ConePlayer extends PApplet {
         switch (theOscMessage.addrPattern()){
             case "/newTrack":
                 String oscMessage = (String)theOscMessage.arguments()[0];
-                String[] strValues = (oscMessage.split(";");
+                String[] strValues = oscMessage.split(";");
                 int[] intValues  = new int[strValues.length];
                 for(int i = 0; i < strValues.length; i++){
                     intValues[i] = Integer.parseInt(strValues[i]);
                 }
                 playFileFromValueArray(intValues, -1);
 
-                serialPort.write("i;" + oscMessage);
+                int[] sendIntValues = new int[intValues.length];
+                for(int i = 0; i < intValues.length; i++){
+                    sendIntValues[i] = (int)map(intValues[i], 0, 30, 0, 180);
+                }
+
+                serialPort.write("i;" + sendIntValues[0] + ";" + sendIntValues[1] + ";" + sendIntValues[2]);
             break;
 
 
