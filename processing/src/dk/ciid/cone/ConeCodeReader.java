@@ -73,6 +73,7 @@ public class ConeCodeReader extends PApplet {
         fill(45);
         rect(width / 2, 0, width / 2, height);
 
+        lastFrameBlobs =  blobs;
         blobs = new ArrayList<>(); // reset blobs
         centerBlobs = new ArrayList<>(); // reset blobs
 
@@ -143,32 +144,56 @@ public class ConeCodeReader extends PApplet {
                 if (angle < 0) {
                     angle += 360;
                 }
+
+                // round angle
+                angle = (int)map(Math.round(map(angle, 0 ,360, 0, 12)), 0, 12, 0, 360);
+
+
                 blob.setAngleToCenter(angle);
                 int distance = new Double(Math.sqrt(Math.pow((blob.getCenterPoint().x - centerPoint.x), 2) + Math.pow((blob.getCenterPoint().y - centerPoint.y), 2))).intValue();
                 blob.setDistanceToCenter(distance);
 
 
             }
-            blobs.sort(Blob::compareTo);
 
-            for (Blob blob : blobs) {
-                println("distance: " + blob.getDistanceToCenter() + "  angle: " + blob.getAngleToCenter() + "°");
-
-            }
-            OscMessage myOscMessage = new OscMessage("/newTrack");
-                        /* add a value (an integer) to the OscMessage */
-            String blobAngleMsg = "";
-            for (Blob blob : blobs) {
-                blobAngleMsg = blobAngleMsg + blob.getAngleToCenter() + ";";
-            }
-
-            myOscMessage.add(blobAngleMsg);
-                        /* send the OscMessage to a remote location specified in myNetAddress */
-            // oscP5.send(myOscMessage, myBroadcastLocation);
-            OscP5.flush(myOscMessage, myRemoteLocation);
-
+            // Draw center point
             fill(255, 0, 0);
             ellipse(centerPoint.x, centerPoint.y, 40, 40);
+
+            // Sort blobs
+            blobs.sort(Blob::compareTo);
+
+            // only update if there are changes since lase frame
+            boolean changesSinceLastTime = false;
+
+            if(lastFrameBlobs.size() == 3){
+                for(int i = 0; i < blobs.size(); i++){
+                    if(lastFrameBlobs.get(i).getAngleToCenter() != blobs.get(i).getAngleToCenter()){
+                        changesSinceLastTime = true;
+                    }
+                }
+            }else{
+                changesSinceLastTime = true;
+            }
+            if(changesSinceLastTime){
+                for (Blob blob : blobs) {
+                    println("distance: " + blob.getDistanceToCenter() + "  angle: " + blob.getAngleToCenter() + "°");
+
+                }
+                OscMessage myOscMessage = new OscMessage("/newTrack");
+                        /* add a value (an integer) to the OscMessage */
+                String blobAngleMsg = "";
+                for (Blob blob : blobs) {
+                    blobAngleMsg = blobAngleMsg + blob.getAngleToCenter() + ";";
+                }
+
+                myOscMessage.add(blobAngleMsg);
+                        /* send the OscMessage to a remote location specified in myNetAddress */
+                // oscP5.send(myOscMessage, myBroadcastLocation);
+                OscP5.flush(myOscMessage, myRemoteLocation);
+
+            }
+
         }
 
 

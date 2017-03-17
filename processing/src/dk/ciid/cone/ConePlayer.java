@@ -7,6 +7,7 @@ import processing.core.*;
 import processing.serial.Serial;
 import processing.sound.*;
 import java.io.File;
+import java.util.ArrayList;
 
 public class ConePlayer extends PApplet {
 
@@ -89,9 +90,9 @@ public class ConePlayer extends PApplet {
         }
         lastTimePlayed = millis();
 
-        int value1 = (int)map(valueArray[0], 0, 254, 0,30);
-        int value2 = (int)map(valueArray[1], 0, 254, 0,30);
-        int value3 = (int)map(valueArray[2], 0, 254, 0,30);
+        int value1 = (int)map(valueArray[0], 0, 360, 0,30);
+        int value2 = (int)map(valueArray[1], 0, 360, 0,30);
+        int value3 = (int)map(valueArray[2], 0, 360, 0,30);
 
         int index = (value1 ^ value2) ^ value3;
 
@@ -121,6 +122,13 @@ public class ConePlayer extends PApplet {
 
         switch (theOscMessage.addrPattern()){
             case "/newTrack":
+
+                String[] strValues = ((String)theOscMessage.arguments()[0]).split(";");
+                int[] intValues  = new int[strValues.length];
+                for(int i = 0; i < strValues.length; i++){
+                    intValues[i] = Integer.parseInt(strValues[i]);
+                }
+                playFileFromValueArray(intValues, -1);
 
             break;
 
