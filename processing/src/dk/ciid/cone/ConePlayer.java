@@ -37,8 +37,8 @@ public class ConePlayer extends PApplet {
         smooth();
         noStroke();
 
-        //String path = "/Users/kelvyn/Projects/2017_03 Physical Computing Connected/Production/Code/processing/src/data/music/"; // <--- CHANGE THIS.
-        String path = "/Users/vytas/workspace/the_cone/processing/src/data/music/";
+        String path = "/Users/kelvyn/Projects/2017_03 Physical Computing Connected/Production/Code/processing/src/data/music/"; // <--- CHANGE THIS.
+//        String path = "/Users/vytas/workspace/the_cone/processing/src/data/music/";
         fileNames = listFileNames(path);
         for (int i = 0; i < fileNames.length; i++) {
             fileNames[i] = path + fileNames[i];
@@ -132,14 +132,15 @@ public class ConePlayer extends PApplet {
 
         switch (theOscMessage.addrPattern()){
             case "/newTrack":
-
-                String[] strValues = ((String)theOscMessage.arguments()[0]).split(";");
+                String oscMessage = (String)theOscMessage.arguments()[0];
+                String[] strValues = (oscMessage.split(";");
                 int[] intValues  = new int[strValues.length];
                 for(int i = 0; i < strValues.length; i++){
                     intValues[i] = Integer.parseInt(strValues[i]);
                 }
                 playFileFromValueArray(intValues, -1);
 
+                serialPort.write("i;" + oscMessage);
             break;
 
 
