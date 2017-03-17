@@ -37,8 +37,8 @@ public class ConePlayer extends PApplet {
         smooth();
         noStroke();
 
-        String path = "/Users/kelvyn/Projects/2017_03 Physical Computing Connected/Production/Code/processing/src/data/music/"; // <--- CHANGE THIS.
-//        String path = "/Users/vytas/workspace/the_cone/processing/src/data/music/";
+//        String path = "/Users/kelvyn/Projects/2017_03 Physical Computing Connected/Production/Code/processing/src/data/music/"; // <--- CHANGE THIS.
+        String path = "/Users/vytas/workspace/the_cone/processing/src/data/music/";
         fileNames = listFileNames(path);
         for (int i = 0; i < fileNames.length; i++) {
             fileNames[i] = path + fileNames[i];
@@ -145,7 +145,7 @@ public class ConePlayer extends PApplet {
                     sendIntValues[i] = (int)map(intValues[i], 0, 30, 0, 180);
                 }
 
-                serialPort.write("i;" + sendIntValues[0] + ";" + sendIntValues[1] + ";" + sendIntValues[2]);
+                serialPort.write(sendIntValues[0] + ";" + sendIntValues[1] + ";" + sendIntValues[2]);
             break;
 
 
