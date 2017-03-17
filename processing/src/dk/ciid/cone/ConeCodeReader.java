@@ -9,15 +9,16 @@ import controlP5.*;
 
 import processing.core.PApplet;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.ListIterator;
+import java.util.*;
 
 public class ConeCodeReader extends PApplet {
 
     Capture cam;
     public static int READING_RESOLUTION = 4;
     public static int MIN_NUMBER_OF_POINTS_PER_BLOB = 8;
+
+    public static int BLOB_QUE_SIZE = 10;
+
 
     public static int SOURDUNDING_PIXEL_RESOLUTION = 4;
     public static int CAMERA_WIDTH = 640;
@@ -26,13 +27,23 @@ public class ConeCodeReader extends PApplet {
     ControlP5 cp5;
     ArrayList<Blob> centerBlobs = new ArrayList<>();
     ArrayList<Blob> lastFrameBlobs = new ArrayList<>();
+    PriorityQueue<BlobGroup> blobGroupQue;
     ArrayList<Blob> blobs = new ArrayList<>();
 
 
     NetAddress myRemoteLocation;
 
     public void settings() {
+
         size(640 * 2, 480 * 2);
+        blobGroupQue = new PriorityQueue<BlobGroup>(10, new Comparator<BlobGroup>()
+        {
+            @Override
+            public int compare(BlobGroup blobGroupA, BlobGroup blobGroupB)
+            {
+                return (int)(blobGroupA.getTimestamp() - blobGroupB.getTimestamp());
+            }
+        });
     }
 
     public void setup() {
@@ -146,7 +157,7 @@ public class ConeCodeReader extends PApplet {
                 }
 
                 // round angle
-                angle = (int)map(Math.round(map(angle, 0 ,360, 0, 12)), 0, 12, 0, 360);
+                // angle = (int)map(Math.round(map(angle, 0 ,360, 0, 12)), 0, 12, 0, 360);
 
 
                 blob.setAngleToCenter(angle);
@@ -163,38 +174,35 @@ public class ConeCodeReader extends PApplet {
             // Sort blobs
             blobs.sort(Blob::compareTo);
 
-            // only update if there are changes since lase frame
-            boolean changesSinceLastTime = false;
+            blobGroupQue.add(new BlobGroup(centerBlobs, blobs, new Date().getTime()));
 
-            if(lastFrameBlobs.size() == 3){
-                for(int i = 0; i < blobs.size(); i++){
-                    if(lastFrameBlobs.get(i).getAngleToCenter() != blobs.get(i).getAngleToCenter()){
-                        changesSinceLastTime = true;
-                    }
-                }
-            }else{
-                changesSinceLastTime = true;
-            }
-            if(changesSinceLastTime){
-                for (Blob blob : blobs) {
-                    println("distance: " + blob.getDistanceToCenter() + "  angle: " + blob.getAngleToCenter() + "°");
+            if (blobGroupQue.size() > BLOB_QUE_SIZE)
+                blobGroupQue.poll();
 
-                }
-                OscMessage myOscMessage = new OscMessage("/newTrack");
-                        /* add a value (an integer) to the OscMessage */
-                String blobAngleMsg = "";
-                for (Blob blob : blobs) {
-                    blobAngleMsg = blobAngleMsg + blob.getAngleToCenter() + ";";
-                }
+            println("Blob Que Size" + blobGroupQue.size());
 
-                myOscMessage.add(blobAngleMsg);
-                        /* send the OscMessage to a remote location specified in myNetAddress */
-                // oscP5.send(myOscMessage, myBroadcastLocation);
-                OscP5.flush(myOscMessage, myRemoteLocation);
+
+            // TODO only update if there are changes since lase frame
+
+            for (Blob blob : blobs) {
+                println("distance: " + blob.getDistanceToCenter() + "  angle: " + blob.getAngleToCenter() + "°");
 
             }
+            OscMessage myOscMessage = new OscMessage("/newTrack");
+                    /* add a value (an integer) to the OscMessage */
+            String blobAngleMsg = "";
+            for (Blob blob : blobs) {
+                blobAngleMsg = blobAngleMsg + blob.getAngleToCenter() + ";";
+            }
+
+            myOscMessage.add(blobAngleMsg);
+                    /* send the OscMessage to a remote location specified in myNetAddress */
+            // oscP5.send(myOscMessage, myBroadcastLocation);
+            OscP5.flush(myOscMessage, myRemoteLocation);
 
         }
+
+
 
 
 /*
