@@ -18,6 +18,7 @@ public class ConeCodeReader extends PApplet {
     public static int MIN_NUMBER_OF_POINTS_PER_BLOB = 8;
 
     public static int BLOB_QUE_SIZE = 10;
+    public static int BLOB_QUE_TOLLERANCE_PER_BLOB = 10;
 
 
     public static int SOURDUNDING_PIXEL_RESOLUTION = 4;
@@ -27,8 +28,10 @@ public class ConeCodeReader extends PApplet {
     ControlP5 cp5;
     ArrayList<Blob> centerBlobs = new ArrayList<>();
     ArrayList<Blob> lastFrameBlobs = new ArrayList<>();
-    PriorityQueue<BlobGroup> blobGroupQue;
     ArrayList<Blob> blobs = new ArrayList<>();
+
+    PriorityQueue<BlobGroup> blobGroupQue;
+    BlobGroup lastSentBlobGroup;
 
 
     NetAddress myRemoteLocation;
@@ -143,8 +146,6 @@ public class ConeCodeReader extends PApplet {
             PVector centerPoint = centerBlobs.get(0).getCenterPoint();
             // Collections.sort(blobs);
 
-
-            println("");
             for (Blob blob : blobs) {
                 fill(255, 255, 0);
                 ellipse(blob.getCenterPoint().x, blob.getCenterPoint().y, 40, 40);
@@ -174,36 +175,43 @@ public class ConeCodeReader extends PApplet {
             // Sort blobs
             blobs.sort(Blob::compareTo);
 
-            blobGroupQue.add(new BlobGroup(centerBlobs, blobs, new Date().getTime()));
+            BlobGroup currentBlobGroup = new BlobGroup(centerBlobs, blobs, new Date().getTime());
+
+            int totalBlobGroupDifference = 0;
+
+            for (BlobGroup blobGroupB : blobGroupQue) {
+                int diff = currentBlobGroup.compareToBlobGroup(blobGroupB);
+                totalBlobGroupDifference += diff;
+            }
+
+            blobGroupQue.add(currentBlobGroup);
 
             if (blobGroupQue.size() > BLOB_QUE_SIZE)
                 blobGroupQue.poll();
 
-            println("Blob Que Size" + blobGroupQue.size());
-
-
             // TODO only update if there are changes since lase frame
 
-            for (Blob blob : blobs) {
-                println("distance: " + blob.getDistanceToCenter() + "  angle: " + blob.getAngleToCenter() + "°");
 
+            if(totalBlobGroupDifference <= blobGroupQue.size() * BLOB_QUE_TOLLERANCE_PER_BLOB &&
+                    (lastSentBlobGroup == null || currentBlobGroup.compareToBlobGroup(lastSentBlobGroup) > BLOB_QUE_TOLLERANCE_PER_BLOB)){
+                for (Blob blob : blobs) {
+                    println("distance: " + blob.getDistanceToCenter() + "  angle: " + blob.getAngleToCenter() + "°");
+                }
+                OscMessage myOscMessage = new OscMessage("/newTrack");
+                /* add a value (an integer) to the OscMessage */
+                String blobAngleMsg = "";
+                for (Blob blob : blobs) {
+                    blobAngleMsg = blobAngleMsg + blob.getAngleToCenter() + ";";
+                }
+
+                myOscMessage.add(blobAngleMsg);
+                /* send the OscMessage to a remote location specified in myNetAddress */
+                // oscP5.send(myOscMessage, myBroadcastLocation);
+                OscP5.flush(myOscMessage, myRemoteLocation);
+
+                lastSentBlobGroup = currentBlobGroup; // set last sent blob group
             }
-            OscMessage myOscMessage = new OscMessage("/newTrack");
-                    /* add a value (an integer) to the OscMessage */
-            String blobAngleMsg = "";
-            for (Blob blob : blobs) {
-                blobAngleMsg = blobAngleMsg + blob.getAngleToCenter() + ";";
-            }
-
-            myOscMessage.add(blobAngleMsg);
-                    /* send the OscMessage to a remote location specified in myNetAddress */
-            // oscP5.send(myOscMessage, myBroadcastLocation);
-            OscP5.flush(myOscMessage, myRemoteLocation);
-
         }
-
-
-
 
 /*
 

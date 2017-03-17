@@ -28,4 +28,14 @@ public class BlobGroup {
     public long getTimestamp() {
         return timestamp;
     }
+
+    public int compareToBlobGroup(BlobGroup blogGroupB){
+        int difference = 0;
+
+        int blobCount = Math.min(this.getBlobs().size(), blogGroupB.getBlobs().size());
+        for(int i = 0; i < blobCount; i++ ){
+            difference += Math.abs(this.getBlobs().get(i).getAngleToCenter() - blogGroupB.getBlobs().get(i).getAngleToCenter());
+        }
+        return difference;
+    }
 }
