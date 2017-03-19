@@ -24,6 +24,8 @@ public class ConeCodeReader extends PApplet {
     public static int SOURDUNDING_PIXEL_RESOLUTION = 4;
     public static int CAMERA_WIDTH = 640;
     public static int CAMERA_HEIGHT = 480;
+    int CAMERA_X_PADDING = 100;
+    int CAMERA_Y_PADDING = 50;
 
     ControlP5 cp5;
     ArrayList<Blob> centerBlobs = new ArrayList<>();
@@ -64,23 +66,30 @@ public class ConeCodeReader extends PApplet {
 
             // The camera can be initialized directly using an
             // element from the array returned by list():
-            cam = new Capture(this, cameras[0]);
+            // Capture(parent, requestWidth, requestHeight, cameraName, frameRate)
+            cam = new Capture(this, CAMERA_WIDTH, CAMERA_HEIGHT, cameras[0]);
 
             cam.start();
         }
 
         cp5 = new ControlP5(this);
-        cp5.addColorWheel("colorCenter", 3 * width / 4 - 200, 200, 200).setRGB(color(30, 30, 30));
+        cp5.addColorWheel("colorCenter", 3 * width / 4 - 200, 300, 200).setRGB(color(30, 30, 30));
         cp5.addColorWheel("colorDots", 3 * width / 4 - 200, 580, 200).setRGB(color(128, 20, 20));
+
+
+        cp5.addSlider("CAMERA_X_PADDING")
+                .setPosition(3 * width / 4,50)
+                .setRange(0,CAMERA_WIDTH/3);
+
+        cp5.addSlider("CAMERA_Y_PADDING")
+                .setPosition(3 * width / 4,100)
+                .setRange(0,CAMERA_HEIGHT/3);
 
         myRemoteLocation = new NetAddress("127.0.0.1", 32000);
 
     }
 
     public void draw() {
-
-        int CAMERA_X_PADDING = 200;
-        int CAMERA_Y_PADDING = 100;
 
         // println(cp5.get(ColorWheel.class,"colorCenter").getRGB());
 
@@ -89,6 +98,9 @@ public class ConeCodeReader extends PApplet {
         noStroke();
         fill(45);
         rect(width / 2, 0, width / 2, height);
+
+        fill(220, 220,220);
+        rect(CAMERA_X_PADDING, CAMERA_Y_PADDING, CAMERA_WIDTH - CAMERA_X_PADDING * 2, CAMERA_HEIGHT - CAMERA_Y_PADDING * 2);
 
         blobs = new ArrayList<>(); // reset blobs
         centerBlobs = new ArrayList<>(); // reset blobs
@@ -106,8 +118,9 @@ public class ConeCodeReader extends PApplet {
 
 
 
-            for (int x = 0; x < CAMERA_WIDTH / READING_RESOLUTION; x++) {
-                for (int y = 0; y < CAMERA_HEIGHT / READING_RESOLUTION; y++) {
+
+            for (int x = CAMERA_X_PADDING / READING_RESOLUTION; x < (CAMERA_WIDTH - CAMERA_X_PADDING )/ READING_RESOLUTION; x++) {
+                for (int y = CAMERA_Y_PADDING / READING_RESOLUTION; y < (CAMERA_HEIGHT - CAMERA_Y_PADDING) / READING_RESOLUTION; y++) {
                     int c = cam.get(x * READING_RESOLUTION, y * READING_RESOLUTION);
                     fill(c);
                     if (red(c) > 90 && green(c) > 90 && blue(c) < 180 && red(c) + green(c) - 120 > blue(c)*2) {
@@ -184,7 +197,6 @@ public class ConeCodeReader extends PApplet {
                 int distance = new Double(Math.sqrt(Math.pow((blob.getCenterPoint().x - centerPoint.x), 2) + Math.pow((blob.getCenterPoint().y - centerPoint.y), 2))).intValue();
                 blob.setDistanceToCenter(distance);
 
-
             }
 
             // Draw reading area
@@ -236,27 +248,11 @@ public class ConeCodeReader extends PApplet {
                 lastSentBlobGroup = currentBlobGroup; // set last sent blob group
             }
 
-            fill(0, 0,255);
-            rect(CAMERA_X_PADDING, CAMERA_Y_PADDING, CAMERA_WIDTH - CAMERA_X_PADDING , CAMERA_HEIGHT - CAMERA_X_PADDING);
+
         }
 
-/*
 
-        float angle = (float) Math.toDegrees(Math.atan2(target.y - y, target.x - x));
 
-        if(angle < 0){
-            angle += 360;
-        }
-*/
-        /*
-        for(PVector blackDot: blackDots){
-            ellipse(blackDot.x, blackDot.x, 8, 8);
-        }
-
-        ellipse(40, 40, 8, 8);
-        ellipse(width-40, 40, 8, 8);
-        ellipse(40, height-40, 8, 8);
-        ellipse(width-40, height-40, 8, 8);*/
 
 
         delay(40);
