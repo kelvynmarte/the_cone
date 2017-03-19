@@ -15,7 +15,7 @@ public class ConeCodeReader extends PApplet {
 
     Capture cam;
     public static int READING_RESOLUTION = 4;
-    public static int MIN_NUMBER_OF_POINTS_PER_BLOB = 8;
+    public static int MIN_NUMBER_OF_POINTS_PER_BLOB = 5;
 
     public static int BLOB_QUE_SIZE = 10;
     public static int BLOB_QUE_TOLLERANCE_PER_BLOB = 10;
@@ -27,7 +27,7 @@ public class ConeCodeReader extends PApplet {
 
     ControlP5 cp5;
     ArrayList<Blob> centerBlobs = new ArrayList<>();
-    ArrayList<Blob> lastFrameBlobs = new ArrayList<>();
+    ArrayList<Blob> calibrationBlobs = new ArrayList<>();
     ArrayList<Blob> blobs = new ArrayList<>();
 
     PriorityQueue<BlobGroup> blobGroupQue;
@@ -79,6 +79,9 @@ public class ConeCodeReader extends PApplet {
 
     public void draw() {
 
+        int CAMERA_X_PADDING = 200;
+        int CAMERA_Y_PADDING = 100;
+
         // println(cp5.get(ColorWheel.class,"colorCenter").getRGB());
 
         // Background
@@ -87,24 +90,30 @@ public class ConeCodeReader extends PApplet {
         fill(45);
         rect(width / 2, 0, width / 2, height);
 
-        lastFrameBlobs =  blobs;
         blobs = new ArrayList<>(); // reset blobs
         centerBlobs = new ArrayList<>(); // reset blobs
+        calibrationBlobs = new ArrayList<>();
 
 
         ArrayList<PVector> blackDots = new ArrayList();
 
+
+
         if (cam.available() == true) {
             image(cam, 0, height / 2);
             cam.read();
+
+
+
+
             for (int x = 0; x < CAMERA_WIDTH / READING_RESOLUTION; x++) {
                 for (int y = 0; y < CAMERA_HEIGHT / READING_RESOLUTION; y++) {
                     int c = cam.get(x * READING_RESOLUTION, y * READING_RESOLUTION);
                     fill(c);
-                    if (red(c) < 200 && green(c) < 200 && blue(c) > 180) {
-                        // println("blue dot at: " + x*READING_RESOLUTION + " / " + y*READING_RESOLUTION);
+                    if (red(c) > 90 && green(c) > 90 && blue(c) < 180 && red(c) + green(c) - 120 > blue(c)*2) {
+                        addToBlobs(new PVector(x * READING_RESOLUTION, y * READING_RESOLUTION), BlobType.CALIBRATION);
                     }
-                    if (red(c) > 90 && red(c) > green(c) + 30) {
+                    if (red(c) > 90 && red(c) > green(c) + 30) { // TODO Identify center blob by position
                         // println("red dot at: " + x*READING_RESOLUTION + " / " + y*READING_RESOLUTION);
                         addToBlobs(new PVector(x * READING_RESOLUTION, y * READING_RESOLUTION), BlobType.CENTER);
                     }
@@ -116,7 +125,6 @@ public class ConeCodeReader extends PApplet {
                         addToBlobs(new PVector(x * READING_RESOLUTION, y * READING_RESOLUTION), BlobType.DOT);
 
                     }
-
 
                 }
 
@@ -140,7 +148,18 @@ public class ConeCodeReader extends PApplet {
             if (blob.getNumberOfPoints() < MIN_NUMBER_OF_POINTS_PER_BLOB) centerBlobsIterator.remove();
         }
 
+        ListIterator<Blob> calibrationBlobsIterator = calibrationBlobs.listIterator();
+        while (calibrationBlobsIterator.hasNext()) {
+            Blob blob = calibrationBlobsIterator.next();
+            if (blob.getNumberOfPoints() < MIN_NUMBER_OF_POINTS_PER_BLOB) calibrationBlobsIterator.remove();
+        }
+
         // println("blob count: " + blobs.size());
+
+        // println(calibrationBlobs.size());
+
+        // TODO Identify 3 closest blobs to center blob
+        // TODO Maybe additionaly filter out to large blobs (Combine close blobs)
 
         if (blobs.size() == 3 && centerBlobs.size() == 1) {
             PVector centerPoint = centerBlobs.get(0).getCenterPoint();
@@ -168,6 +187,11 @@ public class ConeCodeReader extends PApplet {
 
             }
 
+            // Draw reading area
+
+
+
+
             // Draw center point
             fill(255, 0, 0);
             ellipse(centerPoint.x, centerPoint.y, 40, 40);
@@ -189,7 +213,7 @@ public class ConeCodeReader extends PApplet {
             if (blobGroupQue.size() > BLOB_QUE_SIZE)
                 blobGroupQue.poll();
 
-            // TODO only update if there are changes since lase frame
+            // only update if there are changes since lase 10 frames
 
 
             if(totalBlobGroupDifference <= blobGroupQue.size() * BLOB_QUE_TOLLERANCE_PER_BLOB &&
@@ -211,6 +235,9 @@ public class ConeCodeReader extends PApplet {
 
                 lastSentBlobGroup = currentBlobGroup; // set last sent blob group
             }
+
+            fill(0, 0,255);
+            rect(CAMERA_X_PADDING, CAMERA_Y_PADDING, CAMERA_WIDTH - CAMERA_X_PADDING , CAMERA_HEIGHT - CAMERA_X_PADDING);
         }
 
 /*
@@ -264,6 +291,17 @@ public class ConeCodeReader extends PApplet {
                 }
             }
             if (createNewBlob) centerBlobs.add(new Blob(point, type));
+        }
+
+        if (type == BlobType.CALIBRATION) {
+            for (Blob calibrationBlob : calibrationBlobs) {
+                if (calibrationBlob.getBlobType() == type && calibrationBlob.isPartOfBlob(point)) {
+                    calibrationBlob.addPointToBLob(point);
+                    createNewBlob = false;
+                    return;
+                }
+            }
+            if (createNewBlob) calibrationBlobs.add(new Blob(point, type));
         }
 
 
