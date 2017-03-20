@@ -37,8 +37,8 @@ public class ConePlayer extends PApplet {
         smooth();
         noStroke();
 
-//        String path = "/Users/kelvyn/Projects/2017_03 Physical Computing Connected/Production/Code/processing/src/data/music/"; // <--- CHANGE THIS.
-        String path = "/Users/vytas/workspace/the_cone/processing/src/data/music/";
+        String path = "/Users/kelvyn/Projects/2017_03 Physical Computing Connected/05 Production/Code/processing/src/data/music/"; // <--- CHANGE THIS.
+        // String path = "/Users/vytas/workspace/the_cone/processing/src/data/music/";
         fileNames = listFileNames(path);
         for (int i = 0; i < fileNames.length; i++) {
             fileNames[i] = path + fileNames[i];
