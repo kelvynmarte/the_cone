@@ -24,8 +24,9 @@ public class ConeCodeReader extends PApplet {
     public static int SOURDUNDING_PIXEL_RESOLUTION = 4;
     public static int CAMERA_WIDTH = 640;
     public static int CAMERA_HEIGHT = 480;
-    int CAMERA_X_PADDING = 100;
-    int CAMERA_Y_PADDING = 50;
+    public int CAMERA_X_PADDING = 100;
+    public int CAMERA_Y_PADDING = 50;
+    // public int CAMERA_CENTER_BLOB_DETECTION_DIAMETER = 50; TODO
 
     ControlP5 cp5;
     ArrayList<Blob> centerBlobs = new ArrayList<>();
