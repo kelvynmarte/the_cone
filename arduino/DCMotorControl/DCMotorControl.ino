@@ -71,7 +71,7 @@ void loop() {
 
   delay(2000); */
   
-  /*
+  
    if (Serial.available() > 0) {
     String first  = Serial.readStringUntil(';');
     //Serial.read(); //next character is comma, so skip it using this
@@ -85,7 +85,7 @@ void loop() {
     if ((targetPosition[0] == 0) || (targetPosition[1] == 0) || (targetPosition[2] ==0)) {
       Serial.print("error");
     }
-  } */
+  } 
   
   boolean valuesChanged = false;
   for (int i = 0; i < MOTOR_COUNT; i++) { // sizeof crashes the sketch
