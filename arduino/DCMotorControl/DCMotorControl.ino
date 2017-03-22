@@ -1,6 +1,8 @@
 
 
-const int TOLLERANZE = 2;
+#define MAX_MOVEMENT_TIME_TO_TARGET_POSITION 12000
+#define TOLERANCE 2
+
 
 const int CONTROL_PIN_1[] = {2, 7, 10}; // 7 on L293(1),  10 on L293(1), 7 on L293(2)
 const int CONTROL_PIN_2[] = {3, 6, 11}; // 2 on L293(1), 15 on L293(1), 2 on L293(2)
@@ -14,10 +16,12 @@ const int VALUE_CHANGED_TOLERANCE = 5;
 const int MOTOR_COUNT = 3;
 const int MAX_POSITION = 180;
 
+
+
 int lastSentPosition[] = {0, 0, 0};
 int currentPosition[] = {0, 0, 0};
 int targetPosition[] = {-1, -1, -1};
-
+long unsigned revicedNewTargetPositionTime = 0; 
 
 /*
   const int M1_DIRECTION_PIN = 4;  // connected to the switch for direction
@@ -39,37 +43,6 @@ void setup() {
 }
 
 void loop() {
-  // Serial.println("HELLO");
-
-  /*
-    float value = analogRead(SENSOR_PIN[0]);
-            Serial.print("0: ");
-
-  Serial.print(value);
-  float valuef = 1000.0*pow(value/550.,10);
-  Serial.print(" => ");
-  Serial.println(mapLogarithmicValue(value));
-
-
-  
-     value = analogRead(SENSOR_PIN[1]);
-        Serial.print("1: ");
-
-  Serial.print(value);
-  valuef = 1000.0*pow(value/550.,10);
-  Serial.print(" => ");
-  Serial.println(mapLogarithmicValue(value));
-
-   value = analogRead(SENSOR_PIN[2]);
-    Serial.print("2: ");
-
-  Serial.print(value);
-  valuef = 1000.0*pow(value/550.,10);
-  Serial.print(" => ");
-  Serial.println(mapLogarithmicValue(value));
-
-
-  delay(2000); */
   
   
    if (Serial.available() > 0) {
@@ -84,19 +57,36 @@ void loop() {
     targetPosition[2]  = (int)third.toInt();
     if ((targetPosition[0] == 0) || (targetPosition[1] == 0) || (targetPosition[2] ==0)) {
       Serial.print("error");
+      for (int i = 0; i < MOTOR_COUNT; i++) {
+        targetPosition[i] = -1;
+      }
+    }else {
+      revicedNewTargetPositionTime = millis();
     }
   } 
   
   boolean valuesChanged = false;
+
   for (int i = 0; i < MOTOR_COUNT; i++) { // sizeof crashes the sketch
+    
     currentPosition[i] = readPosition(SENSOR_PIN[i]);
 
-    if(targetPosition[i] != -1) moveToPosition(i, targetPosition[i]);
+    if(revicedNewTargetPositionTime + MAX_MOVEMENT_TIME_TO_TARGET_POSITION < millis()){
+      targetPosition[i] = -1;
+    }
+
+    if(targetPosition[i] != -1){
+      moveToPosition(i, targetPosition[i]);
+    }else{
+      analogWrite(ENABLE_PIN[i], 0);
+    }
     
     if(abs(lastSentPosition[i] - currentPosition[i]) > VALUE_CHANGED_TOLERANCE) {
       // sent new values
       valuesChanged = true;
     }
+
+
   }
   if(valuesChanged) sendPotentiometerValues();
 
@@ -110,7 +100,6 @@ boolean moveToPosition(int motorId, int pos) {
   int difference = pos - current_pos;
   // Enable Motor
   if (difference < 0) {
-
     digitalWrite(CONTROL_PIN_1[motorId], HIGH);
     digitalWrite(CONTROL_PIN_2[motorId], LOW);
 
@@ -118,7 +107,7 @@ boolean moveToPosition(int motorId, int pos) {
     digitalWrite(CONTROL_PIN_1[motorId], LOW);
     digitalWrite(CONTROL_PIN_2[motorId], HIGH);
   }
-  if (abs(difference) > TOLLERANZE) {
+  if (abs(difference) > TOLERANCE) {
     analogWrite(ENABLE_PIN[motorId], 255);
     return false;
   } else {

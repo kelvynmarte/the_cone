@@ -17,7 +17,7 @@ public class ConeCodeReader extends PApplet {
     public static int READING_RESOLUTION = 4;
     public static int MIN_NUMBER_OF_POINTS_PER_BLOB = 8;
 
-    public static int BLOB_QUE_SIZE = 4;
+    public static int BLOB_QUE_SIZE = 2;
     public static int BLOB_QUE_TOLLERANCE_PER_BLOB = 10;
 
 
@@ -171,7 +171,7 @@ public class ConeCodeReader extends PApplet {
         // TODO Identify 3 closest blobs to center blob
         // TODO Maybe additionaly filter out to large blobs (Combine close blobs)
 
-        println(blobs.size());
+        // println(blobs.size());
 
         for(Blob centerBlob : centerBlobs){
             fill(255, 0, 0);
@@ -186,7 +186,7 @@ public class ConeCodeReader extends PApplet {
 
 
         blobs.subList(0, Math.max(blobs.size()-3, 0)).clear();
-        println(":: " + blobs.size());
+        // println(":: " + blobs.size());
 
         for(Blob blob : blobs){
             fill(0, 0, 0);
