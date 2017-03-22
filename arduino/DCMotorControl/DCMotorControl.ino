@@ -10,7 +10,7 @@ const int SENSOR_PIN[] = {A3, A2, A1};
 const int SENSOR_INPUT_VALUE[] = {0, 4, 20,65,127,285,427,509,533, 600};
 const int SENSOR_INPUT_VALUE_MAPPING[] = {0, 20, 60,100,140,180,220,260,300, 300};
 
-const int VALUE_CHANGED_TOLERANCE = 4;
+const int VALUE_CHANGED_TOLERANCE = 5;
 const int MOTOR_COUNT = 3;
 const int MAX_POSITION = 180;
 

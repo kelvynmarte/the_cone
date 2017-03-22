@@ -24,9 +24,6 @@ public class ConePlayer extends PApplet {
 
 
 
-
-
-
     public void settings() {
         size(700,400);
         oscP5 = new OscP5(this,SERVER_DEFAULT_SERVER_LISTENING_PORT);
@@ -54,6 +51,8 @@ public class ConePlayer extends PApplet {
             try {
                 String stringValue = serialPort.readStringUntil(LF);
                 if (stringValue != null) {
+                    println("serial message: " + stringValue);
+
                     String[] values = stringValue.split(";");
                     int[] intValues = new int[3];
                     intValues[0] = Integer.parseInt(values[0]);
@@ -107,6 +106,8 @@ public class ConePlayer extends PApplet {
         currentPlayingIndex = index;
 
         String fileName = fileNames[index];
+        print("values: " + value1 + " - " + value2 + " - " + value3);
+        println(" index: " +index);
         println(fileName);
 
         if (currentPlaying != null) {
@@ -142,7 +143,8 @@ public class ConePlayer extends PApplet {
 
                 int[] sendIntValues = new int[intValues.length];
                 for(int i = 0; i < intValues.length; i++){
-                    sendIntValues[i] = (int)map(intValues[i], 0, 30, 0, 180);
+                    sendIntValues[i] = (int)map(intValues[i], 0, 30, 0, 360);
+                    //sendIntValues[i] = intValues[i]; // no mapping
                 }
 
                 serialPort.write(sendIntValues[0] + ";" + sendIntValues[1] + ";" + sendIntValues[2]);

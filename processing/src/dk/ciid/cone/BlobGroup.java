@@ -38,4 +38,14 @@ public class BlobGroup {
         }
         return difference;
     }
+
+    public int getMaxDistanceToCenter(){
+        int maxDistance = 0;
+        for(Blob blob : blobs){
+            if(blob.getDistanceToCenter() > maxDistance){
+                maxDistance = blob.getDistanceToCenter();
+            }
+        }
+        return maxDistance;
+    }
 }

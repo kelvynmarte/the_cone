@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * Created by kelvyn on 16/03/2017.
  */
 public class Blob implements Comparable<Blob> {
-    public static int MAX_DISTANCE_TO_START_POINT = 28;
+    public static int MAX_DISTANCE_TO_START_POINT = 20;
 
     ArrayList<PVector> points = new ArrayList<>();
     PVector startPositin;
