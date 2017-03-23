@@ -14,8 +14,9 @@ import java.util.*;
 public class ConeCodeReader extends PApplet {
 
     Capture cam;
-    public static int READING_RESOLUTION = 4;
-    public static int MIN_NUMBER_OF_POINTS_PER_BLOB = 8;
+    public static int MAX_DISTANCE_TO_START_POINT = 24;
+    public static int READING_RESOLUTION = 2;
+    public static int MIN_NUMBER_OF_POINTS_PER_BLOB = 20;
 
     public static int BLOB_QUE_SIZE = 2;
     public static int BLOB_QUE_TOLLERANCE_PER_BLOB = 10;
@@ -87,6 +88,22 @@ public class ConeCodeReader extends PApplet {
                 .setPosition(3 * width / 4,100)
                 .setRange(0,CAMERA_HEIGHT/3);
 
+        cp5.addSlider("MAX_DISTANCE_TO_START_POINT")
+                .setPosition(3 * width / 4,150)
+                .setRange(1,60);
+
+        cp5.addSlider("READING_RESOLUTION")
+                .setPosition(3 * width / 4,200)
+                .setRange(1,60);
+
+        cp5.addSlider("MIN_NUMBER_OF_POINTS_PER_BLOB")
+                .setPosition(3 * width / 4,250)
+                .setRange(1,250);
+
+        cp5.addSlider("MAX_DISTANCE_TO_CENTER")
+                .setPosition(3 * width / 4,300)
+                .setRange(1,250);
+
         myRemoteLocation = new NetAddress("127.0.0.1", 32000);
 
     }
@@ -128,10 +145,10 @@ public class ConeCodeReader extends PApplet {
                         addToBlobs(new PVector(x * READING_RESOLUTION, y * READING_RESOLUTION), BlobType.CENTER);
                     }
 
-                    if (red(c) < 18 && green(c) < 18 && blue(c) < 18) {
+                    if (red(c) < 32 && green(c) < 32 && blue(c) < 32) {
                         // println("black dot at: " + x*READING_RESOLUTION + " / " + y*READING_RESOLUTION);
                         blackDots.add(new PVector(x * READING_RESOLUTION, y * READING_RESOLUTION));
-                        ellipse(x * READING_RESOLUTION, y * READING_RESOLUTION, READING_RESOLUTION, READING_RESOLUTION);
+                        // ellipse(x * READING_RESOLUTION, y * READING_RESOLUTION, READING_RESOLUTION, READING_RESOLUTION);
                         addToBlobs(new PVector(x * READING_RESOLUTION, y * READING_RESOLUTION), BlobType.DOT);
 
                     }
@@ -177,30 +194,24 @@ public class ConeCodeReader extends PApplet {
             fill(255, 0, 0);
             ellipse(centerBlob.getCenterPoint().x, centerBlob.getCenterPoint().y, 40, 40);
         }
-/*
-        for(Blob blob : blobs){
-            fill(100, 100, 100);
-            ellipse(blob.startPositin.x, blob.startPositin.y, 40, 40);
-        }
-*/
-
-
-        blobs.subList(0, Math.max(blobs.size()-3, 0)).clear();
-        // println(":: " + blobs.size());
 
         for(Blob blob : blobs){
-            fill(0, 0, 0);
-            ellipse(blob.startPositin.x, blob.startPositin.y, 40, 40);
+            // fill(100, 100, 100);
+            // ellipse(blob.startPositin.x, blob.startPositin.y, 40, 40);
         }
 
-        if (centerBlobs.size() == 1 && blobs.size() == 3)  {
-            PVector centerPoint = centerBlobs.get(0).getCenterPoint();
+
+
+
+
+        if (centerBlobs.size() == 1 || centerBlobs.size() == 2 && blobs.size() > 3)  {
+            PVector centerPoint = centerBlobs.get(0).startPositin;
             // Collections.sort(blobs);
 
 
             for (Blob blob : blobs) {
-                fill(255, 255, 0);
-                ellipse(blob.getCenterPoint().x, blob.getCenterPoint().y, 40, 40);
+                //fill(255, 255, 0);
+                // ellipse(blob.getCenterPoint().x, blob.getCenterPoint().y, 40, 40);
 
                 // Calculate angle and distance
                 int angle = (int) Math.toDegrees(Math.atan2(blob.getCenterPoint().y - centerPoint.y, blob.getCenterPoint().x - centerPoint.x));
@@ -209,25 +220,60 @@ public class ConeCodeReader extends PApplet {
                     angle += 360;
                 }
 
-                // round angle
-                // angle = (int)map(Math.round(map(angle, 0 ,360, 0, 12)), 0, 12, 0, 360);
-
-
                 blob.setAngleToCenter(angle);
                 int distance = new Double(Math.sqrt(Math.pow((blob.getCenterPoint().x - centerPoint.x), 2) + Math.pow((blob.getCenterPoint().y - centerPoint.y), 2))).intValue();
                 blob.setDistanceToCenter(distance);
+            }
+
+
+            // Sort blobs
+            blobs.sort(Blob::compareTo);
+
+            for(Blob blob : blobs) {
+                // println(blob.getDistanceToCenter());
+            }
+            // println("##");
+
+
+
+            blobs.subList(0, Math.max(blobs.size()-3, 0)).clear();
+            // println(":: " + blobs.size());
+
+            for(Blob blob : blobs){
+
+
+                fill(0, 0, 255);
+                ellipse(blob.getCenterPoint().x, blob.getCenterPoint().y, 12, 12);
+                // println(blob.getDistanceToCenter());
 
             }
+            int[] blobColors = {color(0,255, 0), color(0,0, 255),color(0,255, 255), color(255,100, 255)};
+            for(int i = 0; i < blobs.size(); i++){
+
+                Blob blob = blobs.get(i);
+
+                fill(255,255,0, 150);
+                ellipse(blob.startPositin.x, blob.startPositin.y, MAX_DISTANCE_TO_START_POINT, MAX_DISTANCE_TO_START_POINT);
+                for(PVector point : blob.getPoints()){
+                    fill(blobColors[i]);
+                    ellipse(point.x, point.y, READING_RESOLUTION, READING_RESOLUTION);
+                }
+
+
+
+
+
+            }
+            // println();
 
             // Draw reading area
 
 
             // Draw center point
-            fill(255, 0, 0);
-            ellipse(centerPoint.x, centerPoint.y, 40, 40);
+            // fill(255, 0, 0);
+            // ellipse(centerPoint.x, centerPoint.y, 40, 40);
 
-            // Sort blobs
-            blobs.sort(Blob::compareTo);
+
 
             BlobGroup currentBlobGroup = new BlobGroup(centerBlobs, blobs, new Date().getTime());
 

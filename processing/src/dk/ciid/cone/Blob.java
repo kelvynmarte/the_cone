@@ -5,11 +5,12 @@ import processing.core.PVector;
 
 import java.util.ArrayList;
 
+import static dk.ciid.cone.ConeCodeReader.MAX_DISTANCE_TO_START_POINT;
+
 /**
  * Created by kelvyn on 16/03/2017.
  */
 public class Blob implements Comparable<Blob> {
-    public static int MAX_DISTANCE_TO_START_POINT = 20;
 
     ArrayList<PVector> points = new ArrayList<>();
     PVector startPositin;
@@ -28,7 +29,8 @@ public class Blob implements Comparable<Blob> {
     }
 
     public boolean isPartOfBlob(PVector pos){
-        return Math.abs(startPositin.x - pos.x) < MAX_DISTANCE_TO_START_POINT && Math.abs(startPositin.x - pos.x) < MAX_DISTANCE_TO_START_POINT;
+       return (new Double(Math.sqrt(Math.pow((startPositin.x - pos.x), 2) + Math.pow((startPositin.y - pos.y), 2))).intValue() < MAX_DISTANCE_TO_START_POINT);
+        //return Math.abs(startPositin.x - pos.x) < MAX_DISTANCE_TO_START_POINT && Math.abs(startPositin.x - pos.x) < MAX_DISTANCE_TO_START_POINT;
     }
 
     public void addPointToBLob(PVector point){
@@ -71,6 +73,10 @@ public class Blob implements Comparable<Blob> {
 
     @Override
     public int compareTo(Blob b) {
-        return this.distanceToCenter - b.distanceToCenter;
+        return b.distanceToCenter - this.distanceToCenter;
+    }
+
+    public ArrayList<PVector> getPoints() {
+        return points;
     }
 }
